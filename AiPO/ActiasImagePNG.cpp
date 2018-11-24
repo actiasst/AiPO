@@ -20,9 +20,32 @@ int ImagePNG::read_image(std::string path) {
 			return -1;
 		}
 
+		read_to_memblock(4, file_pointer);
+		chunk_size = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
+
 		read_to_memblock(4,file_pointer);
-		for (int i = 0; i < 4; i++)
+		if (memblock[0] != 73 || memblock[1] != 72 || memblock[2] != 68 || memblock[3] != 82) {
+			std::cout << "File is corupted" << std::endl;
+			return -1;
+		}
+		else
+			IHDR(file_pointer);
+		//wczytanie CRC do odczytu nie potrzbne
+		read_to_memblock(4, file_pointer);
+
+		read_to_memblock(4, file_pointer);
+		chunk_size = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
+		read_to_memblock(4, file_pointer);
+		std::string tmp_name = merge_name((char)memblock[0], (char)memblock[1], (char)memblock[2], (char)memblock[3]);
+		std::cout << chunk_size << std::endl << tmp_name << std::endl;
+		read_to_memblock(1, file_pointer);
+		std::cout << (int)memblock[0] << std::endl;
+
+		read_to_memblock(14, file_pointer);
+
+		for (int i = 0; i < size; i++)
 			std::cout << (int)memblock[i] << std::endl;
+		std::cout << std::endl;
 
 		file.close();
 	}
@@ -34,7 +57,7 @@ int ImagePNG::read_image(std::string path) {
 	return 0;
 }
 
-unsigned int ImagePNG::mergeBytes(int a, int b, int c, int d) {
+unsigned int ImagePNG::merge_bytes(int a, int b, int c, int d) {
 	return (((((a << 8) | b) << 8) | c) << 8) | d;
 }
 
@@ -46,4 +69,41 @@ void ImagePNG::read_to_memblock(int size,std::ifstream* file_pointer) {
 	position_next += size;
 	file_pointer->seekg(position_prev);
 	file_pointer->read((char*)memblock, this->size);
+	/*for (int i = 0; i < size; i++)
+		std::cout << (int)memblock[i] << std::endl;
+	std::cout<<std::endl;*/
+}
+
+void ImagePNG::description() {
+	std::cout << "Description" << std::endl;
+	std::cout << "Width " << width << std::endl;
+	std::cout << "Height " << height << std::endl;
+	std::cout << "Bit depth " << bit_depth << std::endl;
+	std::cout << "Colour type " << colour_type << std::endl;
+	std::cout << "Compression method " << compression_method << std::endl;
+	std::cout << "Filter method " << filter_method << std::endl;
+	std::cout << "Interlace method " << interlace_method << std::endl;
+	std::cout << std::endl;
+}
+
+void ImagePNG::IHDR(std::ifstream* file_pointer) {
+	read_to_memblock(4, file_pointer);
+	width = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
+	read_to_memblock(4, file_pointer);
+	height = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
+	read_to_memblock(5, file_pointer);
+	bit_depth = memblock[0];
+	colour_type = memblock[1];
+	compression_method = memblock[2];
+	filter_method = memblock[3];
+	interlace_method = memblock[4];
+}
+
+std::string ImagePNG::merge_name(char a, char b, char c, char d){
+	std::string tmp = "    ";
+	tmp[0] = a;
+	tmp[1] = b;
+	tmp[2] = c;
+	tmp[3] = d;
+	return tmp;
 }

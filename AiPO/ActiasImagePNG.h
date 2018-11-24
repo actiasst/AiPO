@@ -4,8 +4,8 @@
 #include <iostream>
 
 class ImagePNG {
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 	int bit_depth;
 	int colour_type;
 	int compression_method;
@@ -17,9 +17,12 @@ class ImagePNG {
 	int position_prev;
 	int position_next;
 	void read_to_memblock(int,std::ifstream*);
+	void IHDR(std::ifstream*);
+	unsigned int merge_bytes(int, int, int, int);
+	std::string merge_name(char, char, char, char);
 public:
 	ImagePNG();
 	ImagePNG(std::string);
 	int read_image(std::string);
-	unsigned int mergeBytes(int, int, int, int);
+	void description();
 };
