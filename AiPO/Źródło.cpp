@@ -10,7 +10,6 @@ int main() {
 	unsigned long int c;
 	c = (a << 8) | b;
 	cout << c << endl;*/
-
 	system("pause");
 }
 

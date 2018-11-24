@@ -11,8 +11,15 @@ class ImagePNG {
 	int compression_method;
 	int filter_method;
 	int interlace_method;
+	std::streampos size;
+	unsigned char * memblock;
+	unsigned int chunk_size;
+	int position_prev;
+	int position_next;
+	void read_to_memblock(int,std::ifstream*);
 public:
 	ImagePNG();
 	ImagePNG(std::string);
 	int read_image(std::string);
+	unsigned int mergeBytes(int, int, int, int);
 };
