@@ -11,6 +11,11 @@ class ImagePNG {
 	int compression_method;
 	int filter_method;
 	int interlace_method;
+	int sRGB;
+	int gAMA;
+	int pHYs_X;
+	int pHYs_Y;
+	int pHYs_unit_specifier;
 	std::streampos size;
 	unsigned char * memblock;
 	unsigned int chunk_size;
@@ -20,6 +25,10 @@ class ImagePNG {
 	void IHDR(std::ifstream*);
 	unsigned int merge_bytes(int, int, int, int);
 	std::string merge_name(char, char, char, char);
+	void read_chunk(std::ifstream*);
+	void call_sRGB(std::ifstream*);
+	void call_gAMA(std::ifstream*);
+	void call_pHYs(std::ifstream*);
 public:
 	ImagePNG();
 	ImagePNG(std::string);

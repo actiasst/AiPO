@@ -3,9 +3,21 @@
 ImagePNG::ImagePNG(){
 	position_next = 0;
 	position_prev = 0;
+	sRGB = -1;
+	gAMA = -1;
+	pHYs_X = -1;
+	pHYs_Y = -1;
+	pHYs_unit_specifier = -1;
 }
 
 ImagePNG::ImagePNG(std::string path) {
+	position_next = 0;
+	position_prev = 0;
+	sRGB = -1;
+	gAMA = -1;
+	pHYs_X = -1;
+	pHYs_Y = -1;
+	pHYs_unit_specifier = -1;
 	read_image(path);
 }
 
@@ -28,21 +40,17 @@ int ImagePNG::read_image(std::string path) {
 			std::cout << "File is corupted" << std::endl;
 			return -1;
 		}
-		else
+		else {
 			IHDR(file_pointer);
-		//wczytanie CRC do odczytu nie potrzbne
-		read_to_memblock(4, file_pointer);
+			//wczytanie CRC do odczytu nie potrzbne
+			read_to_memblock(4, file_pointer);
+		}
 
-		read_to_memblock(4, file_pointer);
-		chunk_size = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
-		read_to_memblock(4, file_pointer);
-		std::string tmp_name = merge_name((char)memblock[0], (char)memblock[1], (char)memblock[2], (char)memblock[3]);
-		std::cout << chunk_size << std::endl << tmp_name << std::endl;
-		read_to_memblock(1, file_pointer);
-		std::cout << (int)memblock[0] << std::endl;
+		read_chunk(file_pointer);
+		read_chunk(file_pointer);
+		read_chunk(file_pointer);
 
-		read_to_memblock(14, file_pointer);
-
+		read_to_memblock(20, file_pointer);
 		for (int i = 0; i < size; i++)
 			std::cout << (int)memblock[i] << std::endl;
 		std::cout << std::endl;
@@ -69,9 +77,6 @@ void ImagePNG::read_to_memblock(int size,std::ifstream* file_pointer) {
 	position_next += size;
 	file_pointer->seekg(position_prev);
 	file_pointer->read((char*)memblock, this->size);
-	/*for (int i = 0; i < size; i++)
-		std::cout << (int)memblock[i] << std::endl;
-	std::cout<<std::endl;*/
 }
 
 void ImagePNG::description() {
@@ -83,6 +88,11 @@ void ImagePNG::description() {
 	std::cout << "Compression method " << compression_method << std::endl;
 	std::cout << "Filter method " << filter_method << std::endl;
 	std::cout << "Interlace method " << interlace_method << std::endl;
+	std::cout << "sRGB " << sRGB << std::endl;
+	std::cout << "gAMA " << gAMA << std::endl;
+	std::cout << "pHYs_X " << pHYs_X << std::endl;
+	std::cout << "pHYs_Y " << pHYs_Y << std::endl;
+	std::cout << "pHYs_unit_specifier " << pHYs_unit_specifier << std::endl;
 	std::cout << std::endl;
 }
 
@@ -106,4 +116,46 @@ std::string ImagePNG::merge_name(char a, char b, char c, char d){
 	tmp[2] = c;
 	tmp[3] = d;
 	return tmp;
+}
+
+void ImagePNG::read_chunk(std::ifstream* file_pointer) {
+
+	read_to_memblock(4, file_pointer);
+	chunk_size = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
+	read_to_memblock(4, file_pointer);
+	std::string tmp_name = merge_name((char)memblock[0], (char)memblock[1], (char)memblock[2], (char)memblock[3]);
+	if (tmp_name == "sRGB")
+		call_sRGB(file_pointer);
+	else if (tmp_name == "gAMA")
+		call_gAMA(file_pointer);
+	else if (tmp_name == "pHYs")
+		call_pHYs(file_pointer);
+}
+
+void ImagePNG::call_sRGB(std::ifstream* file_pointer) {
+	std::cout << "sRGB" << std::endl;
+	read_to_memblock(chunk_size, file_pointer);
+	sRGB = (int)memblock[0];
+	//wczytanie CRC do odczytu nie potrzbne
+	read_to_memblock(4, file_pointer);
+}
+
+void ImagePNG::call_gAMA(std::ifstream* file_pointer) {
+	std::cout << "gAMA" << std::endl;
+	read_to_memblock(chunk_size, file_pointer);
+	gAMA = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
+	//wczytanie CRC do odczytu nie potrzbne
+	read_to_memblock(4, file_pointer);
+}
+
+void ImagePNG::call_pHYs(std::ifstream* file_pointer) {
+	std::cout << "pHYs" << std::endl;
+	read_to_memblock(4, file_pointer);
+	pHYs_X = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
+	read_to_memblock(4, file_pointer);
+	pHYs_Y = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
+	read_to_memblock(1, file_pointer);
+	pHYs_unit_specifier = (int)memblock[0];
+	//wczytanie CRC do odczytu nie potrzbne
+	read_to_memblock(4, file_pointer);
 }
