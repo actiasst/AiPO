@@ -8,6 +8,12 @@ ImagePNG::ImagePNG(){
 	pHYs_X = -1;
 	pHYs_Y = -1;
 	pHYs_unit_specifier = -1;
+	year = -1;
+	month = -1;
+	day = -1;
+	hour = -1;
+	minute = -1;
+	second = -1;
 }
 
 ImagePNG::ImagePNG(std::string path) {
@@ -18,6 +24,12 @@ ImagePNG::ImagePNG(std::string path) {
 	pHYs_X = -1;
 	pHYs_Y = -1;
 	pHYs_unit_specifier = -1;
+	year = -1;
+	month = -1;
+	day = -1;
+	hour = -1;
+	minute = -1;
+	second = -1;
 	read_image(path);
 }
 
@@ -46,10 +58,9 @@ int ImagePNG::read_image(std::string path) {
 			read_to_memblock(4, file_pointer);
 		}
 
-		read_chunk(file_pointer);
-		read_chunk(file_pointer);
-		read_chunk(file_pointer);
-
+		for(int i = 0; i < 7; i++)
+			read_chunk(file_pointer);
+		
 		read_to_memblock(20, file_pointer);
 		for (int i = 0; i < size; i++)
 			std::cout << (int)memblock[i] << std::endl;
@@ -93,6 +104,7 @@ void ImagePNG::description() {
 	std::cout << "pHYs_X " << pHYs_X << std::endl;
 	std::cout << "pHYs_Y " << pHYs_Y << std::endl;
 	std::cout << "pHYs_unit_specifier " << pHYs_unit_specifier << std::endl;
+	std::cout << "Date " << year << ":" << month << ":" << day << " " << hour << ":" << minute << ":" << second << std::endl;
 	std::cout << std::endl;
 }
 
@@ -119,7 +131,6 @@ std::string ImagePNG::merge_name(char a, char b, char c, char d){
 }
 
 void ImagePNG::read_chunk(std::ifstream* file_pointer) {
-
 	read_to_memblock(4, file_pointer);
 	chunk_size = merge_bytes(memblock[0], memblock[1], memblock[2], memblock[3]);
 	read_to_memblock(4, file_pointer);
@@ -130,32 +141,49 @@ void ImagePNG::read_chunk(std::ifstream* file_pointer) {
 		call_gAMA(file_pointer);
 	else if (tmp_name == "pHYs")
 		call_pHYs(file_pointer);
+	else if (tmp_name == "tIME")
+		call_tIME(file_pointer);
+	else if (tmp_name == "tEXt")
+		call_tEXT(file_pointer);
+	//wczytanie CRC do odczytu nie potrzbne
+	read_to_memblock(4, file_pointer);
 }
 
 void ImagePNG::call_sRGB(std::ifstream* file_pointer) {
 	std::cout << "sRGB" << std::endl;
 	read_to_memblock(chunk_size, file_pointer);
 	sRGB = (int)memblock[0];
-	//wczytanie CRC do odczytu nie potrzbne
-	read_to_memblock(4, file_pointer);
 }
 
 void ImagePNG::call_gAMA(std::ifstream* file_pointer) {
 	std::cout << "gAMA" << std::endl;
 	read_to_memblock(chunk_size, file_pointer);
 	gAMA = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
-	//wczytanie CRC do odczytu nie potrzbne
-	read_to_memblock(4, file_pointer);
 }
 
 void ImagePNG::call_pHYs(std::ifstream* file_pointer) {
 	std::cout << "pHYs" << std::endl;
-	read_to_memblock(4, file_pointer);
+	read_to_memblock(chunk_size, file_pointer);
 	pHYs_X = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
-	read_to_memblock(4, file_pointer);
-	pHYs_Y = merge_bytes((int)memblock[0], (int)memblock[1], (int)memblock[2], (int)memblock[3]);
-	read_to_memblock(1, file_pointer);
-	pHYs_unit_specifier = (int)memblock[0];
-	//wczytanie CRC do odczytu nie potrzbne
-	read_to_memblock(4, file_pointer);
+	pHYs_Y = merge_bytes((int)memblock[4], (int)memblock[5], (int)memblock[6], (int)memblock[7]);
+	pHYs_unit_specifier = (int)memblock[8];
+}
+
+void ImagePNG::call_tIME(std::ifstream* file_pointer) {
+	std::cout << "tIME" << std::endl;
+	read_to_memblock(chunk_size, file_pointer);
+	year = merge_bytes(0, 0, (int)memblock[0], memblock[1]);
+	month = (int)memblock[2];
+	day = (int)memblock[3];
+	hour = (int)memblock[4];
+	minute = (int)memblock[5];
+	second = (int)memblock[6];
+}
+
+void ImagePNG::call_tEXT(std::ifstream* file_pointer) {
+	std::cout << "tEXt" << std::endl;
+	read_to_memblock(chunk_size, file_pointer);
+	for (int i = 0; i < chunk_size; i++)
+		std::cout << (char)memblock[i];
+	std::cout << std::endl;
 }

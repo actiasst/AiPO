@@ -16,6 +16,12 @@ class ImagePNG {
 	int pHYs_X;
 	int pHYs_Y;
 	int pHYs_unit_specifier;
+	int year;
+	int month;
+	int day;
+	int hour;
+	int minute;
+	int second;
 	std::streampos size;
 	unsigned char * memblock;
 	unsigned int chunk_size;
@@ -29,6 +35,8 @@ class ImagePNG {
 	void call_sRGB(std::ifstream*);
 	void call_gAMA(std::ifstream*);
 	void call_pHYs(std::ifstream*);
+	void call_tIME(std::ifstream*);
+	void call_tEXT(std::ifstream*);
 public:
 	ImagePNG();
 	ImagePNG(std::string);
