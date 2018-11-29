@@ -61,10 +61,12 @@ int ImagePNG::read_image(std::string path) {
 		for(int i = 0; i < 7; i++)
 			read_chunk(file_pointer);
 		
-		read_to_memblock(20, file_pointer);
+		//read_to_memblock(65323, file_pointer);
+		read_to_memblock(16, file_pointer);
 		for (int i = 0; i < size; i++)
 			std::cout << (int)memblock[i] << std::endl;
 		std::cout << std::endl;
+		
 
 		file.close();
 	}
